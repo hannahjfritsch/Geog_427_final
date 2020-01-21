@@ -12,31 +12,38 @@ arcpy.env.overwriteOutput = True
 
 #input and output files
 
-csv = r"E:\GEO427\Project\Portland_Air\filter_first_week_clean.csv"
-fc = r"E:\GEO427\Project\Neighborhoods_Regions\Neighborhoods_Regions.shp"
+print('checking out tools')
+arcpy.CheckOutExtension("Spatial")
+print('setting up workspace')
+arcpy.env.workspace = path
+arcpy.env.overwriteOutput = True
+
+
+#input and output files
+
+csv = arcpy.GetParameterAsText(0)
+fc = arcpy.GetParameterAsText(12)
 #out
-raster_out =r"E:\GEO427\Project\full_map_first week"
+raster_out =arcpy.GetParameterAsText(1)
 
 
 #input column names
-time = "Time"
-name ="Sensor"
-lat ="Latitude"
-lon ="Longitude"
-value ="PM2_5_ATMA"
-clip = False
+time = arcpy.GetParameterAsText(2)
+name =arcpy.GetParameterAsText(5)
+lat =arcpy.GetParameterAsText(3)
+lon =arcpy.GetParameterAsText(4)
+value =arcpy.GetParameterAsText(6)
+clip = arcpy.GetParameterAsText(11)
 
 
-start_date_time = "2019-02-04 00:00:00"
-end_date_time= "2019-02-08 11:59:00"
-start_time ="08:00:00"
-end_time="17:00:00"
+start_date_time = arcpy.GetParameterAsText(7)
+end_date_time= arcpy.GetParameterAsText(8)
+start_time =arcpy.GetParameterAsText(9)
+end_time=arcpy.GetParameterAsText(10)
 time_format="yyyy-MM-dd HH:mm:ss"
 py_time_format = '%Y-%m-%d %H:%M:%S'
 
-
 # internal names
-clipping ="clipping.shp"
 init_air = "init_air"
 air = "air"
 air_table = "air_table"
@@ -97,7 +104,7 @@ for row in update:
         row = handle_time(row)
         if((row[2]>=sd_time) & (row[2]<= ed_time)&(row[3]>=sd_time_chunk)& (row[3]<= ed_time_chunk)):
             update.updateRow(row)
-            all_stamps.add(row[2])
+            all_stamps.add(row[0])
         else:
             update.deleteRow()
     except Exception as e:
@@ -137,9 +144,10 @@ def create_layer (table,time, time_column, value_column):
 
 
 try:
-    sum = create_layer(init_air,all_stamps.pop(),date_column, value)
+    sum = create_layer(init_air,all_stamps.pop(),time, value)
     total = 1
 except Exception as e:
+    print(e)
 
 
 #loop over unique time values, create a layer for each one

@@ -8,12 +8,6 @@
 # Copyright:   (c) Hannah Fritsch 2019
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
-""" Reformats data from purple air sensor downloads to a joint csv with the
-spatial data and sensor names as columns
-
-currently has too much hardcoding"""
-
-
 import os
 import regex
 import pandas as p
@@ -21,7 +15,7 @@ import filters
 
 #constants
 data_path = r"E:\GEO427\Project\Portland_Air"
-out_file = "filter_first_week.csv"
+out_file = "full_merge.csv"
 
 #column variables
 merge_key = "created_at"
@@ -56,8 +50,8 @@ def main():
     for site in site_set:
         site_file = reshape_Location(site,all_files)
         if not(site_file is None):
-            filters.median_spike_filter(site_file, 'PM2.5_CF1_ug/m3_x',5,30)
-            site_file=site_file.head(1400)
+            #filters.median_spike_filter(site_file, 'PM2.5_CF1_ug/m3_x',5,30) calls filter function
+            #site_file=site_file.head(1400)
             if full_file is None:
                 full_file = site_file
             else:
@@ -74,13 +68,22 @@ def reshape_Location(name,file_list):
     or the sensor is indoors"""
     #loop over site_set and get the matching names
     prime = get_Primary(name, file_list)
+    second = get_Secondary(name, file_list)
     #identify a and b
     #assume no duplicates
     a =exp_Matches(purpleA, prime)[0]
     b = exp_Matches(purpleB, prime)[0]
+    c = exp_Matches(purpleA, second)[0]
+    d = exp_Matches(purpleB, second)[0]
     #read the open the files
+
+
     dfA =p.read_csv(a)
     dfB = p.read_csv(b)
+    dfC =p.read_csv(c)
+    dfD = p.read_csv(d)
+
+
     is_out = is_Outdoor(a)
     #check df lengths - kill now if no data
     if max(dfA.size,dfB.size)<1:
@@ -90,7 +93,7 @@ def reshape_Location(name,file_list):
     #pull the coordinates
     lat,long = get_Coord(a)
     #merge dfA and dfB based on the time column
-    merged = dfA.merge(dfB,"outer",merge_key)
+    merged = dfA.merge(dfC,"outer",merge_key).merge(dfB,"outer",merge_key).merge(dfD,"outer",merge_key)
     #add the columns
     merged[sensor_key] = name
     merged["Latitude"] = lat
@@ -154,6 +157,17 @@ def get_Primary (name, files):
     subset = exp_Matches(purple,subset)
     #further subset to primary
     subset = exp_Matches(primary,subset)
+    return subset
+
+def get_Secondary (name, files):
+    """ Given the cleaned site name, and a list of files
+    this returns a list that contains
+    the primary files for the sensor."""
+    subset = exp_Matches (name, files)
+    #verify correct file type
+    subset = exp_Matches(purple,subset)
+    #further subset to primary
+    subset = exp_Matches(secondary,subset)
     return subset
 
 
