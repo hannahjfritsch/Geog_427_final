@@ -14,7 +14,7 @@ import pandas as p
 import filters
 
 #constants
-data_path = r"E:\GEO427\Project\Portland_Air"
+data_path = r"C:\Users\Hannah Fritsch\Documents\DEMP_Code\Download"
 out_file = "full_merge.csv"
 
 #column variables
@@ -98,6 +98,8 @@ def reshape_Location(name,file_list):
     merged[sensor_key] = name
     merged["Latitude"] = lat
     merged["Longitude"]= long
+
+    merged = merged.drop_duplicates()
 
     return merged
 
